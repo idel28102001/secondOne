@@ -20,6 +20,7 @@ export class UsersService {
 
   async getUserByUsername(username: string, ctx: any) {
     const user = await this.usersRepository.findOne({ where: { username } });
+    console.log(user);
     if (!user) await this.notFound(ctx);
     return user;
   }
@@ -29,7 +30,7 @@ export class UsersService {
   }
 
   async getAllOperators() {
-    return await this.usersRepository.find({ where: { role: Role.OPERATOR } });
+    return await this.usersRepository.find({ where: { role: Role.OPERATOR }, select: ['updatedAt', 'username', 'lastName', 'firstName', 'id'] });
   }
 
   async getAllAdmins() {
@@ -40,10 +41,14 @@ export class UsersService {
     await ctx.reply('Пользователя нет в базе данных - введите команду /start для записи в базу');
   }
 
-  async getUserBId(telegramId: number, ctx: any) {
+  async getUserByTelegramId(telegramId: number, ctx: any) {
     const user = await this.usersRepository.findOne({ where: { telegramId } });
     if (!user) await this.notFound(ctx);
     return user;
+  }
+
+  async getUserById(id: string, ctx: any) {
+    return await this.usersRepository.findOne(id, { select: ['firstName', 'lastName', 'username', 'id', 'operatorReqPending', 'telegramId'] });
   }
 
   async save(data: UsersEntity) {

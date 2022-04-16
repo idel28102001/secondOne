@@ -1,129 +1,79 @@
 import { Injectable } from '@nestjs/common';
 import { UsersEntity } from 'src/users/entities/users.entities';
-import { Role } from 'src/users/enums/role.enum';
-import { UsersService } from 'src/users/services/users.service';
-import { Context, Scenes, Telegraf } from 'telegraf';
-import { Context as Ctx } from 'vm';
+import { Context } from 'telegraf';
 
 @Injectable()
 export class TelegramService {
-  constructor(
-    private readonly usersService: UsersService,
-  ) {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  constructor() {}
 
-  async sendKeyboard(ctx: Context, username: string, id: number) {
-    const user = await this.usersService.getUserByUsername(username, ctx);
-    if (!user) return;
-    if (!user.telegramId) {
-      user.telegramId = id;
-      await this.usersService.save(user);
+  async removeOneElement(ctx: any) {
+    const callbackData = ctx.update.callback_query.data;
+    const keyboards = ctx.update.callback_query.message.reply_markup.inline_keyboard;
+    const keyOfKeyboards = keyboards.map(e => e[0].callback_data);
+    const index = keyOfKeyboards.indexOf(callbackData);
+    if (index !== -1) {
+      keyboards.splice(index, 1);
     }
-    switch (user.role) {
-      case Role.CLIENT: {
-        await this.clientKeyboard(ctx);
-        break;
-      }
-      case Role.OPERATOR: {
-        await this.operatorKeyboard(ctx);
-        break;
-      }
-      case Role.ADMIN: {
-        await this.adminKeyboard(ctx);
-        break;
-      }
+    await ctx.editMessageReplyMarkup({ inline_keyboard: keyboards });
+    return keyboards;
+  }
+
+  async removeAdvancedElement(ctx: any) {
+    const callbackData = ctx.update.callback_query.data;
+    const keyboards = ctx.update.callback_query.message.reply_markup.inline_keyboard;
+    let size = 0;
+    const keyOfKeyboards = keyboards.map(e => e.map(e => {
+      size++;
+      return e.callback_data
+    }));
+    if (size <= 1) {
+      return await ctx.deleteMessage();
     }
-
-    //const s = new Telegraf('');
-    //s.telegram.sendMessage
-
-  }
-
-
-  async clientKeyboard(ctx: Context) {
-    await ctx.reply('Меню клиента', { reply_markup: { inline_keyboard: [[{ text: 'Посмотреть мультфильм', callback_data: 'watch-(cartoon)' }, { text: 'Посмотреть фильм', callback_data: 'watch-(movie)' }]] } });
-  }
-
-  async operatorKeyboard(ctx: Context) {
-    await ctx.reply('Меню оператора', { reply_markup: { inline_keyboard: [[{ text: 'Получить смс', callback_data: 'op-(sms)' }], [{ text: 'Обновить информацию о слотах', callback_data: 'op-(slot)' }]] } });
-  }
-
-  async adminKeyboard(ctx: Context) {
-    const wantsBeOPs = await this.usersService.getAllWantsBeOps();
-    await ctx.reply('Меню администратора', {
-      reply_markup: {
-        inline_keyboard: [[{ text: 'Все операторы', callback_data: 'admin-(all)' }, { text: 'Удалить оператора', callback_data: 'admin-(remove)' }], [{
-          text: `Заявки в операторы (${wantsBeOPs.length})`, callback_data: 'admin-(request)'
-        }]],
+    let i = 0;
+    let resInd: number;
+    keyOfKeyboards.forEach(e => {
+      if (e.includes(callbackData)) {
+        resInd = i;
       }
+      i++;
     });
-  }
-
-  async beOperator(ctx: any, id: number) {
-    const user = await this.usersService.getUserBId(id, ctx);
-    if (!user) return;
-    switch (user.role) {
-      case Role.CLIENT: {
-        await this.operatorClient(ctx, user);
-        break;
+    if (resInd !== undefined) {
+      const index = keyOfKeyboards[resInd].indexOf(callbackData);
+      if (index !== -1) {
+        keyboards[resInd].splice(index, 1);
       }
-      case Role.OPERATOR: {
-        await ctx.reply('Вы уже оператор');
-        break;
-      }
-      case Role.ADMIN: {
-        await ctx.reply('Зачем снижаться по рангу?');
-        break;
-      }
+      await ctx.editMessageReplyMarkup({ inline_keyboard: keyboards });
+      return keyboards;
     }
   }
 
-  async operatorClient(ctx: any, user: UsersEntity) {
-    if (user.operatorReqPending) return await ctx.reply('Уже есть активная заявка');
-    await this.notifyAllAdmins(ctx);
-    user.operatorReqPending = true;
-    await this.usersService.save(user);
-    return await ctx.reply('Ваша заявка в обработке.');
+
+  async removeMessage(ctx: Context) {
+    await ctx.deleteMessage();
   }
 
-  async notifyAllAdmins(ctx: any) {
-    const ops = await this.usersService.getAllAdmins();
-    await Promise.all(ops.map(async (e) => {
-      await ctx.telegram.sendMessage(e.telegramId, 'Новая заявка в операторы')
-    }))
+  getFullName(user: UsersEntity) {
+    let result = '';
+    result += user.username ? `@${user.username} - ` : '';
+    result += user.firstName ? `${user.firstName}` : '';
+    result += user.lastName ? ` ${user.lastName}` : '';
+    return result;
   }
 
-  async allOpReq(ctx: any) {
-    const wantsBeOps = await this.usersService.getAllWantsBeOps();
-    const buttons = wantsBeOps.map(e => {
-      const currName = `${e.firstName} ${e.lastName} - ${e.username}`;
-      return [{ text: currName, callback_data: `adminReq-(${e.id})` }];
-    });
-    ctx.reply('Все операторы', { reply_markup: { inline_keyboard: buttons } })
+  getNameForReqs(user: UsersEntity) {
+    let result = '';
+    result += user.username ? `@${user.username}\n` : '';
+    result += user.firstName ? `${user.firstName}` : '';
+    result += user.lastName ? ` ${user.lastName}\n` : '\n';
+    result += `${this.getTime(new Date())}`;
+    return result;
   }
 
-  async reqDecide(ctx: any) {
-    const id = parseInt(ctx.match[2]);
-    console.log(id);
+  getTime(time: Date) {
+    const month = (time.getMonth() + 1).toString().padStart(2, '0');
+    const day = (time.getDate()).toString().padStart(2, '0');
+    return `${day}.${month}.${time.getFullYear()} в ${time.getHours()}:${time.getMinutes()}`;
   }
 
-  async adminReply(ctx: any) {
-    const res = (ctx as unknown as Ctx).match[1];
-    switch (res) {
-      case 'add': {
-        await ctx.scene.enter('add-op');
-        break;
-      }
-      case 'request': {
-        await this.allOpReq(ctx);
-        break;
-      }
-      case 'req-decide': {
-        await this.reqDecide(ctx);
-        break;
-      }
-      default: {
-        await ctx.reply(`${res} - Информация будет по обновлении`);
-      }
-    }
-  }
 }

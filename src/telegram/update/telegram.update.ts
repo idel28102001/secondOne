@@ -1,16 +1,18 @@
-import { Action, Hears, Message, On, Start, Update } from 'nestjs-telegraf';
+import { Action, Hears, Start, Update } from 'nestjs-telegraf';
 import { UsersService } from 'src/users/services/users.service';
-import { Context } from 'vm';
-import { Context as Ctx, Scenes } from 'telegraf';
-import { TelegramService } from '../services/telegram.service';
-import { callback } from 'telegraf/typings/button';
+import { Context } from 'telegraf';
+import { TelegramAdminService } from '../services/telegram-admin.service';
+import { TelegramClientService } from '../services/telegram-client.service';
+import { TelegramMainService } from '../services/telegram-main.service';
 
 
 @Update()
 export class TelegramUpdate {
   constructor(
     private readonly usersService: UsersService,
-    private readonly telegramService: TelegramService,
+    private readonly telegramMainService: TelegramMainService,
+    private readonly telegramAdminService: TelegramAdminService,
+    private readonly telegramClientService: TelegramClientService,
   ) {}
 
   @Start()
@@ -21,16 +23,18 @@ export class TelegramUpdate {
     //ctx.scene.enter('test');
   }
 
-  @Hears(/^[М | м]еню$/i)
+  @Hears(/^\/menu$/i)
+  @Action(/\/menu/)
   async hear(ctx: any) {
-    const { username, id } = ctx.update.message.from;
-    await this.telegramService.sendKeyboard(ctx, username, id);
+    ctx.deleteMessage();
+    const { id } = ctx.update.message ? ctx.update.message.from : ctx.update.callback_query.message.chat;
+    await this.telegramMainService.sendKeyboard(ctx, id);
   }
 
   @Hears(/^\/wanttobeoperator$/)
   async beOperator(ctx: any) {
     const { id } = ctx.update.message.from;
-    await this.telegramService.beOperator(ctx, id);
+    await this.telegramMainService.beOperator(ctx, id);
   }
 
   @Action(/^watch-\((.+)\)$/)
@@ -46,15 +50,18 @@ export class TelegramUpdate {
   }
 
   @Action(/^admin-\(([a-zA-Z]+?)\)$/g)
-  async admin(ctx: Ctx) {
-    await this.telegramService.adminReply(ctx)
+  async admin(ctx: any) {
+    await this.telegramMainService.adminReply(ctx)
   }
 
-  @Action(/^adminReq-\((.+?)\)$/g)
-  async adminActions(ctx: Ctx) {
-assaasasas
-    //////
-    await this.telegramService.adminReply(ctx)
+  @Action(/^adminReq-\(([a-zA-Z]+?)\)-?\(([a-zA-Z0-9\-]+?)\)?$/g)
+  async adminReq(ctx: any) {
+    await this.telegramAdminService.adminReq(ctx);
+  }
+
+  @Action(/^client-\(([a-zA-Z\-]+?)\)$/)
+  async client(ctx: Context) {
+    await this.telegramClientService.clientReply(ctx);
   }
 
 }
