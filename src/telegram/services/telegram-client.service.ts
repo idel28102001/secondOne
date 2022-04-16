@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CURRENCY, RESERVE } from 'src/common/constants';
+import { CURRENCY } from 'src/common/constants';
 import { Context } from 'telegraf';
 import { Context as Ctx } from 'vm';
 

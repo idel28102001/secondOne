@@ -37,7 +37,7 @@ export class TelegramAdminService {
   }
 
   async makeUser(ctx: Context, id: string) {
-    const user = await this.usersService.getUserById(id, ctx);
+    const user = await this.usersService.getUserById(id);
     const wholeName = this.telegramService.getFullName(user);
     user.role = Role.CLIENT;
     await this.usersService.save(user);
@@ -49,7 +49,7 @@ export class TelegramAdminService {
   async decide(ctx: Context, id: string) {
     const keyboards = await this.telegramService.removeOneElement(ctx);
     if (!keyboards.length) await this.telegramService.removeMessage(ctx);
-    const user = await this.usersService.getUserById(id, ctx);
+    const user = await this.usersService.getUserById(id);
     const wholeName = this.telegramService.getNameForReqs(user);
     const buttons = [{
       text: 'Принять', callback_data: `adminReq-(accept)-(${id})`
@@ -61,7 +61,7 @@ export class TelegramAdminService {
 
   async accept(ctx: Context, id: string) {
     await this.telegramService.removeMessage(ctx);
-    const user = await this.usersService.getUserById(id, ctx);
+    const user = await this.usersService.getUserById(id);
     const wholeName = this.telegramService.getFullName(user);
     const result = await this.makeOperator(ctx, id);
     if (result) {
@@ -72,7 +72,7 @@ export class TelegramAdminService {
 
   async decline(ctx: Context, id: string) {
     await this.telegramService.removeMessage(ctx);
-    const user = await this.usersService.getUserById(id, ctx);
+    const user = await this.usersService.getUserById(id);
     const wholeName = this.telegramService.getFullName(user);
     user.operatorReqPending = null;
     await this.usersService.save(user);
@@ -81,7 +81,7 @@ export class TelegramAdminService {
   }
 
   async makeOperator(ctx: Context, id: string) {
-    const user = await this.usersService.getUserById(id, ctx);
+    const user = await this.usersService.getUserById(id);
     if (!user) await ctx.reply('Пользователя нет в базе данных, он должен вести /start команду');
     else {
       if (this.isOperator(user)) await ctx.reply('Пользователь уже оператор');
