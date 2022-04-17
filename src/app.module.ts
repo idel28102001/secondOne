@@ -7,6 +7,7 @@ import { config } from './common/config';
 import { TelegramModule } from './telegram/telegram.module';
 import { TestWizard } from './telegram/wizards/first.wizard';
 import { UsersModule } from './users/users.module';
+import { RequestsModule } from './requests/requests.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -15,7 +16,7 @@ import { UsersModule } from './users/users.module';
   TelegrafModule.forRoot({
     token: config.telegramToken(),
     middlewares: [session()]
-  }), UsersModule],
+  }), UsersModule, RequestsModule],
   providers: [TestWizard]
 })
 export class AppModule {}

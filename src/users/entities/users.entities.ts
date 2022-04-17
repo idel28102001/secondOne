@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { RequestsEntity } from 'src/requests/entities/requests.entity';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Role } from '../enums/role.enum';
 
 @Entity({ name: 'users' })
@@ -29,4 +30,7 @@ export class UsersEntity {
 
   @Column({ nullable: true })
   operatorReqPending: boolean;
+
+  @OneToMany(()=> RequestsEntity, request => request.user, {cascade: true})
+  requests: RequestsEntity[];
 }

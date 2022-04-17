@@ -14,7 +14,7 @@ export class TelegramAdminService {
 
 
   async adminReq(ctx: any) {
-    const id = ctx.match[2]
+    const id = ctx.match[2];
     const action = ctx.match[1];
     switch (action) {
       case 'decide': {

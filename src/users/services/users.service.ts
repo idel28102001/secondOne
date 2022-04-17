@@ -30,7 +30,7 @@ export class UsersService {
   }
 
   async getAllOperators() {
-    return await this.usersRepository.find({ where: { role: Role.OPERATOR }, select: ['updatedAt', 'username', 'lastName', 'firstName', 'id'] });
+    return await this.usersRepository.find({ where: { role: Role.OPERATOR }, select: ['updatedAt', 'username', 'lastName', 'firstName', 'id', 'telegramId'] });
   }
 
   async getAllAdmins() {
@@ -41,8 +41,8 @@ export class UsersService {
     await ctx.reply('Пользователя нет в базе данных - введите команду /start для записи в базу');
   }
 
-  async getUserByTelegramId(telegramId: number, ctx: any) {
-    const user = await this.usersRepository.findOne({ where: { telegramId } });
+  async getUserByTelegramId(telegramId: number, ctx: any, options?: any) {
+    const user = await this.usersRepository.findOne({ where: { telegramId }, ...options });
     if (!user) await this.notFound(ctx);
     return user;
   }

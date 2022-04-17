@@ -1,17 +1,33 @@
 import { Context, Wizard, WizardStep } from 'nestjs-telegraf'
-import { RESERVE } from 'src/common/constants';
+import { CURRENCY, RESERVE } from 'src/common/constants';
 import { TRC20IsValid } from 'src/common/validate';
+import { RequestsEntity } from 'src/requests/entities/requests.entity';
+import { requestInterface } from 'src/requests/interfaces/request.interface';
+import { RequestsService } from 'src/requests/service/requests.service';
+import { UsersService } from 'src/users/services/users.service';
 import { Scenes } from 'telegraf'
 
 @Wizard('buy')
 export class TestWizard {
+  constructor(
+    private readonly requestsService: RequestsService,
+  ) {}
 
-  private readonly requst = new Map();
+  private readonly request: Record<string, string | number> = {};
+  private timeStamp: any;
+  private reqId: string;
 
   async deleteMessages(ctx: Scenes.WizardContext) {
     await ctx.deleteMessage(ctx.message.message_id - 1);
     await ctx.deleteMessage(ctx.message.message_id);
   }
+
+  // async makeExpired(ctx: any, req: RequestsEntity, reqService: RequestsService) {
+  //   req.expired = true;
+  //   const res = await reqService.save(req);
+  //   const id = res.id.toString().padStart(4, '0');
+  //   await ctx.reply(`Заявка #${id} истекла по времени`);
+  // }
 
 
   @WizardStep(1)
@@ -35,7 +51,7 @@ export class TestWizard {
       ctx.wizard.selectStep(1);
       return;
     }
-    this.requst.set('number', Number(num));
+    this.request.count = Number(num);
     await ctx.reply('Введите адрес вашего TRC20 кошелька')
     ctx.wizard.next();
   }
@@ -50,9 +66,13 @@ export class TestWizard {
       ctx.wizard.selectStep(2);
     }
     else {
-      this.requst.set('wallet', wallet);
+      this.request.wallet = wallet;
+      this.request.rate = CURRENCY;
+      const result = ctx as any;
+      const tgId = result.update.message.from.id;
+      const req = await this.requestsService.createReq(this.request, tgId, ctx);
       await ctx.reply('Ваша заявка сформирована');
-      console.log(this.requst.entries());
+      clearTimeout(this.timeStamp);
       ctx.scene.leave()
     }
   }
