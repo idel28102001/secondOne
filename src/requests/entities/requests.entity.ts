@@ -18,8 +18,11 @@ export class RequestsEntity {
   @Column({ nullable: true })
   wallet: string;
 
-  @Column({ nullable: true })
-  expired: boolean;
+  @Column({ default: 'Новая' })
+  status: string;
+
+  @Column('json', {nullable: true})
+  messages: string;
 
   @ManyToOne(() => UsersEntity, user => user.requests, { 'onDelete': 'CASCADE' })
   user: UsersEntity;

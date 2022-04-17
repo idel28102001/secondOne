@@ -10,7 +10,6 @@ export class UsersService {
   constructor(@InjectRepository(UsersEntity) private readonly usersRepository: Repository<UsersEntity>) {}
 
   async register(data: UserDto) {
-    console.log(data);
     const check = await this.usersRepository.findOne({ where: { telegramId: data.telegramId } });
     if (!check) {
       const res = this.usersRepository.create(data);
@@ -20,7 +19,6 @@ export class UsersService {
 
   async getUserByUsername(username: string, ctx: any) {
     const user = await this.usersRepository.findOne({ where: { username } });
-    console.log(user);
     if (!user) await this.notFound(ctx);
     return user;
   }

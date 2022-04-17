@@ -5,7 +5,7 @@ import { TelegrafModule } from 'nestjs-telegraf';
 import { session } from 'telegraf';
 import { config } from './common/config';
 import { TelegramModule } from './telegram/telegram.module';
-import { TestWizard } from './telegram/wizards/first.wizard';
+import { BuyWizard } from './telegram/wizards/buy.wizard';
 import { UsersModule } from './users/users.module';
 import { RequestsModule } from './requests/requests.module';
 
@@ -17,6 +17,6 @@ import { RequestsModule } from './requests/requests.module';
     token: config.telegramToken(),
     middlewares: [session()]
   }), UsersModule, RequestsModule],
-  providers: [TestWizard]
+  providers: [BuyWizard]
 })
 export class AppModule {}

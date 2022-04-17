@@ -4,6 +4,7 @@ import { Context } from 'telegraf';
 import { TelegramAdminService } from '../services/telegram-admin.service';
 import { TelegramClientService } from '../services/telegram-client.service';
 import { TelegramMainService } from '../services/telegram-main.service';
+import { TelegramOperatorService } from '../services/telegram-operator.service';
 
 
 @Update()
@@ -13,20 +14,20 @@ export class TelegramUpdate {
     private readonly telegramMainService: TelegramMainService,
     private readonly telegramAdminService: TelegramAdminService,
     private readonly telegramClientService: TelegramClientService,
+    private readonly telegramOperatorService: TelegramOperatorService,
   ) {}
 
   @Start()
   async startCommand(ctx: any) {
     const { id, first_name, last_name, username } = ctx.update.message.from;
     await this.usersService.register({ telegramId: id, firstName: first_name, lastName: last_name, username });
-    ctx.reply('Начало положено');
-    //ctx.scene.enter('test');
+    await ctx.reply('Начало положено');
   }
 
   @Hears(/^\/menu$/i)
   @Action(/\/menu/)
   async hear(ctx: any) {
-    ctx.deleteMessage();
+    await ctx.deleteMessage();
     const { id } = ctx.update.message ? ctx.update.message.from : ctx.update.callback_query.message.chat;
     await this.telegramMainService.sendKeyboard(ctx, id);
   }
@@ -43,10 +44,9 @@ export class TelegramUpdate {
     await ctx.reply(`${res} - Ссылка будет после доработки сервера`);
   }
 
-  @Action(/^op-\((.+)\)$/)
+  @Action(/^op-\(([a-zA-Z\-]+?)\)(-\(([0-9]+?)\))?$/)
   async op(ctx: any) {
-    const res = ctx.match[1];
-    await ctx.reply(`${res} - Информация будет по обновлении`);
+    await this.telegramOperatorService.actions(ctx);
   }
 
   @Action(/^admin-\(([a-zA-Z]+?)\)$/g)

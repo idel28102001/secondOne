@@ -3,8 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UsersEntity } from 'src/users/entities/users.entities';
 import { UsersService } from 'src/users/services/users.service';
 import { Context } from 'telegraf';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { RequestsEntity } from '../entities/requests.entity';
+import { messagesArrayInterface } from '../interfaces/messages-array.interface';
 
 @Injectable()
 export class RequestsService {
@@ -26,24 +27,39 @@ export class RequestsService {
     const ops = await this.usersService.getAllOperators();
     const messArray = [];
     await Promise.all(ops.map(async e => {
+      console.log(`op-(accept-req)-(${last.id})`);
       const text = `Заявка #${last.id} обмен ${money} RUB на ${last.count} USDT\nКурс 1 USDT = ${last.rate} RUB`;
-      const res = await ctx.telegram.sendMessage(e.telegramId, text, { reply_markup: { inline_keyboard: [[{ text: 'Принять', callback_data: 'ops-(accept)-(1221212121)' }]] } });
+      const res = await ctx.telegram.sendMessage(e.telegramId, text, { reply_markup: { inline_keyboard: [[{ text: 'Принять', callback_data: `op-(accept-req)-(${last.id})` }]] } });
       messArray.push({ chatId: res.chat.id, messageId: res.message_id });
     }))
 
-    const timeStamp = setTimeout(this.makeExpired.bind(null, req, this, ctx), 15 * 60000);
-    return last;
+    last.messages = JSON.stringify(messArray);
+    await this.requestRepostitory.save(last);
+
+    setTimeout(this.makeExpired.bind(null, req.id, this.requestRepostitory, this, ctx, messArray), 15 * 60000);
+    return { ...last, money };
   }
 
-  async makeExpired(req: RequestsEntity, reqService: RequestsService, ctx: Context) {
-    req.expired = true;
-    const res = await reqService.save(req);
-    await ctx.reply(`Заявка #${res.id} истекла по времени`);
+  async makeExpired(reqId: string, reqRep: Repository<RequestsEntity>, reqService: RequestsService, ctx: Context, messArray: messagesArrayInterface[]) {
+    const req = await reqRep.findOne(reqId);
+    if (req.status === 'Новая') {
+      req.status = 'Истекла';
+      const res = await reqService.save(req);
+      await ctx.reply(`Заявка #${res.id} истекла по времени`);
+      await Promise.all(messArray.map(async (op) => {
+        await ctx.telegram.editMessageText(op.chatId, op.messageId, '', `Заявка #${reqId} истекла по времени`, { reply_markup: null })
+      }))
+    }
+
   }
 
 
   async save(data: any): Promise<RequestsEntity> {
     return await this.requestRepostitory.save(data);
+  }
+
+  async findById(id: string, options?: FindOneOptions<RequestsEntity>): Promise<RequestsEntity> {
+    return await this.requestRepostitory.findOne(id, options);
   }
 
 

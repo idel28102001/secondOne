@@ -1,33 +1,22 @@
 import { Context, Wizard, WizardStep } from 'nestjs-telegraf'
 import { CURRENCY, RESERVE } from 'src/common/constants';
 import { TRC20IsValid } from 'src/common/validate';
-import { RequestsEntity } from 'src/requests/entities/requests.entity';
-import { requestInterface } from 'src/requests/interfaces/request.interface';
 import { RequestsService } from 'src/requests/service/requests.service';
-import { UsersService } from 'src/users/services/users.service';
 import { Scenes } from 'telegraf'
 
 @Wizard('buy')
-export class TestWizard {
+export class BuyWizard {
   constructor(
     private readonly requestsService: RequestsService,
   ) {}
 
   private readonly request: Record<string, string | number> = {};
   private timeStamp: any;
-  private reqId: string;
 
   async deleteMessages(ctx: Scenes.WizardContext) {
     await ctx.deleteMessage(ctx.message.message_id - 1);
     await ctx.deleteMessage(ctx.message.message_id);
   }
-
-  // async makeExpired(ctx: any, req: RequestsEntity, reqService: RequestsService) {
-  //   req.expired = true;
-  //   const res = await reqService.save(req);
-  //   const id = res.id.toString().padStart(4, '0');
-  //   await ctx.reply(`Заявка #${id} истекла по времени`);
-  // }
 
 
   @WizardStep(1)
@@ -71,7 +60,7 @@ export class TestWizard {
       const result = ctx as any;
       const tgId = result.update.message.from.id;
       const req = await this.requestsService.createReq(this.request, tgId, ctx);
-      await ctx.reply('Ваша заявка сформирована');
+      await ctx.reply(`Заявка #${req.id} обмен ${req.money} RUB на ${req.count} USDT создана\nКошелек ${req.wallet}\nОжидайте ответа оператора`);
       clearTimeout(this.timeStamp);
       ctx.scene.leave()
     }

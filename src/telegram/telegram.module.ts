@@ -6,10 +6,11 @@ import { TelegramAdminService } from './services/telegram-admin.service';
 import { TelegramMainService } from './services/telegram-main.service';
 import { TelegramClientService } from './services/telegram-client.service';
 import { RequestsModule } from 'src/requests/requests.module';
+import { TelegramOperatorService } from './services/telegram-operator.service';
 
 @Module({
   imports: [UsersModule, RequestsModule],
-  providers: [TelegramUpdate, TelegramService, TelegramAdminService, TelegramMainService, TelegramClientService],
+  providers: [TelegramUpdate, TelegramService, TelegramAdminService, TelegramMainService, TelegramClientService, TelegramOperatorService],
   exports: []
 })
 export class TelegramModule {}
