@@ -1,6 +1,7 @@
 import { RequestsEntity } from 'src/requests/entities/requests.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Role } from '../enums/role.enum';
+import { WalletsEntity } from './wallets.entities';
 
 @Entity({ name: 'users' })
 export class UsersEntity {
@@ -31,6 +32,12 @@ export class UsersEntity {
   @Column({ nullable: true })
   operatorReqPending: boolean;
 
-  @OneToMany(()=> RequestsEntity, request => request.user, {cascade: true})
+  @OneToMany(() => WalletsEntity, wallet => wallet.user, { cascade: true })
+  wallets: WalletsEntity[];
+
+  @OneToMany(() => RequestsEntity, request => request.user, { nullable: true })
+  opRequests: RequestsEntity[];
+
+  @OneToMany(() => RequestsEntity, request => request.user, { cascade: true })
   requests: RequestsEntity[];
 }

@@ -25,6 +25,10 @@ class Config {
     };
   }
 
+  public getTimeExpire() {
+    return this.get<number>('EXPIRED');
+  }
+
   public telegramToken(): string {
     return this.get('TELEGRAM_TOKEN');
   }

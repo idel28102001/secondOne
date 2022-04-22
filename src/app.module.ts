@@ -8,6 +8,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { BuyWizard } from './telegram/wizards/buy.wizard';
 import { UsersModule } from './users/users.module';
 import { RequestsModule } from './requests/requests.module';
+import { AddWalletWizard } from './telegram/wizards/add-wallet.wizard';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -17,6 +18,6 @@ import { RequestsModule } from './requests/requests.module';
     token: config.telegramToken(),
     middlewares: [session()]
   }), UsersModule, RequestsModule],
-  providers: [BuyWizard]
+  providers: [BuyWizard, AddWalletWizard]
 })
 export class AppModule {}

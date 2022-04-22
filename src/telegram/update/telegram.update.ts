@@ -3,6 +3,7 @@ import { UsersService } from 'src/users/services/users.service';
 import { Context } from 'telegraf';
 import { TelegramAdminService } from '../services/telegram-admin.service';
 import { TelegramClientService } from '../services/telegram-client.service';
+import { TelegramCommonService } from '../services/telegram-common.service';
 import { TelegramMainService } from '../services/telegram-main.service';
 import { TelegramOperatorService } from '../services/telegram-operator.service';
 
@@ -15,6 +16,7 @@ export class TelegramUpdate {
     private readonly telegramAdminService: TelegramAdminService,
     private readonly telegramClientService: TelegramClientService,
     private readonly telegramOperatorService: TelegramOperatorService,
+    private readonly telegramCommonService: TelegramCommonService,
   ) {}
 
   @Start()
@@ -49,12 +51,17 @@ export class TelegramUpdate {
     await this.telegramOperatorService.actions(ctx);
   }
 
+  @Action(/^common-\(([a-zA-Z\-]+?)\)(-\(([0-9]+?)\))?$/g)
+  async common(ctx: any) {
+    await this.telegramCommonService.commonAction(ctx);
+  }
+
   @Action(/^admin-\(([a-zA-Z]+?)\)$/g)
   async admin(ctx: any) {
     await this.telegramMainService.adminReply(ctx)
   }
 
-  @Action(/^adminReq-\(([a-zA-Z]+?)\)-?\(([a-zA-Z0-9\-]+?)\)?$/g)
+  @Action(/^adminReq-\(([a-zA-Z\-]+?)\)-?\(([a-zA-Z0-9\-]+?)\)?$/g)
   async adminReq(ctx: any) {
     await this.telegramAdminService.adminReq(ctx);
   }

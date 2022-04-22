@@ -7,6 +7,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: config.get<string>('ENV') === 'PROD' ? new MyLogger() : ['error', 'warn', 'log'],
   });
-  await app.listen(3000);
+  await app.listen(5502);
 }
 bootstrap();

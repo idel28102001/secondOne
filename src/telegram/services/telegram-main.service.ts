@@ -45,7 +45,7 @@ export class TelegramMainService {
   }
 
   async operatorKeyboard(ctx: Context) {
-    await ctx.reply('Меню оператора', { reply_markup: { inline_keyboard: [[{ text: 'Получить смс', callback_data: 'op-(sms)' }], [{ text: 'Обновить информацию о слотах', callback_data: 'op-(slot)' }]] } });
+    await ctx.reply('Меню оператора', { reply_markup: { inline_keyboard: [[{ text: 'Настройки', callback_data: 'common-(settings)' }]] } });
   }
 
   async adminKeyboard(ctx: Context) {
@@ -105,7 +105,6 @@ export class TelegramMainService {
   async adminReply(ctx: any) {
     const res = (ctx as unknown as Ctx).match[1];
     await this.telegramService.removeMessage(ctx);
-    //await this.telegramService.removeAdvancedElement(ctx);
     switch (res) {
       case 'requests': {
         await this.telegramAdminService.allOpReq(ctx);
@@ -124,4 +123,5 @@ export class TelegramMainService {
       }
     }
   }
+
 }

@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { UserDto } from '../dto/user.dto';
 import { UsersEntity } from '../entities/users.entities';
 import { Role } from '../enums/role.enum';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(UsersEntity) private readonly usersRepository: Repository<UsersEntity>) {}
+  constructor(
+    @InjectRepository(UsersEntity) private readonly usersRepository: Repository<UsersEntity>,
+  ) {}
 
   async register(data: UserDto) {
     const check = await this.usersRepository.findOne({ where: { telegramId: data.telegramId } });
@@ -39,7 +41,7 @@ export class UsersService {
     await ctx.reply('Пользователя нет в базе данных - введите команду /start для записи в базу');
   }
 
-  async getUserByTelegramId(telegramId: number, ctx: any, options?: any) {
+  async getUserByTelegramId(telegramId: number, ctx: any, options?: FindOneOptions<UsersEntity>) {
     const user = await this.usersRepository.findOne({ where: { telegramId }, ...options });
     if (!user) await this.notFound(ctx);
     return user;
@@ -49,7 +51,7 @@ export class UsersService {
     return await this.usersRepository.findOne(id, { select: ['firstName', 'lastName', 'username', 'id', 'operatorReqPending', 'telegramId'] });
   }
 
-  async save(data: UsersEntity) {
+  async save(data) {
     return await this.usersRepository.save(data);
   }
 

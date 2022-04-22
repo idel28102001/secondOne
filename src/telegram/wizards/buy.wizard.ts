@@ -11,7 +11,6 @@ export class BuyWizard {
   ) {}
 
   private readonly request: Record<string, string | number> = {};
-  private timeStamp: any;
 
   async deleteMessages(ctx: Scenes.WizardContext) {
     await ctx.deleteMessage(ctx.message.message_id - 1);
@@ -51,7 +50,7 @@ export class BuyWizard {
     const wallet = result.message.text;
     await this.deleteMessages(ctx);
     if (!TRC20IsValid(wallet)) {
-      await ctx.reply("Ошибка. Невалидный кошелёк. Введите корректный номер кошелька")
+      await ctx.reply("Ошибка. Невалидный номер кошелька. Введите корректный номер кошелька")
       ctx.wizard.selectStep(2);
     }
     else {
@@ -60,8 +59,7 @@ export class BuyWizard {
       const result = ctx as any;
       const tgId = result.update.message.from.id;
       const req = await this.requestsService.createReq(this.request, tgId, ctx);
-      await ctx.reply(`Заявка #${req.id} обмен ${req.money} RUB на ${req.count} USDT создана\nКошелек ${req.wallet}\nОжидайте ответа оператора`);
-      clearTimeout(this.timeStamp);
+      await ctx.reply(`Заявка #${req.id} обмен ${req.money()} RUB на ${req.count} USDT создана\nКошелек ${req.wallet}\nОжидайте ответа оператора`);
       ctx.scene.leave()
     }
   }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { config } from 'src/common/config';
 import { UsersEntity } from 'src/users/entities/users.entities';
 import { UsersService } from 'src/users/services/users.service';
 import { Context } from 'telegraf';
@@ -27,7 +28,6 @@ export class RequestsService {
     const ops = await this.usersService.getAllOperators();
     const messArray = [];
     await Promise.all(ops.map(async e => {
-      console.log(`op-(accept-req)-(${last.id})`);
       const text = `Заявка #${last.id} обмен ${money} RUB на ${last.count} USDT\nКурс 1 USDT = ${last.rate} RUB`;
       const res = await ctx.telegram.sendMessage(e.telegramId, text, { reply_markup: { inline_keyboard: [[{ text: 'Принять', callback_data: `op-(accept-req)-(${last.id})` }]] } });
       messArray.push({ chatId: res.chat.id, messageId: res.message_id });
@@ -35,9 +35,8 @@ export class RequestsService {
 
     last.messages = JSON.stringify(messArray);
     await this.requestRepostitory.save(last);
-
-    setTimeout(this.makeExpired.bind(null, req.id, this.requestRepostitory, this, ctx, messArray), 15 * 60000);
-    return { ...last, money };
+    setTimeout(this.makeExpired.bind(null, req.id, this.requestRepostitory, this, ctx, messArray), Number(config.getTimeExpire()));
+    return last;
   }
 
   async makeExpired(reqId: string, reqRep: Repository<RequestsEntity>, reqService: RequestsService, ctx: Context, messArray: messagesArrayInterface[]) {
